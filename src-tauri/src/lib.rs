@@ -44,6 +44,8 @@ use tauri::{AppHandle, Emitter, Listener, Manager};
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 use tauri_plugin_log::{Builder as LogBuilder, RotationStrategy, Target, TargetKind};
 
+const FORK_UPDATE_PROTECTED: bool = true;
+
 use crate::settings::get_settings;
 
 // Global atomic to store the file log level filter
@@ -210,7 +212,7 @@ fn initialize_core_logic(app_handle: &AppHandle) {
             }
             "check_updates" => {
                 let settings = settings::get_settings(app);
-                if settings.update_checks_enabled {
+                if settings.update_checks_enabled && !FORK_UPDATE_PROTECTED {
                     show_main_window(app);
                     let _ = app.emit("check-for-updates", ());
                 }
@@ -297,6 +299,10 @@ fn initialize_core_logic(app_handle: &AppHandle) {
 #[tauri::command]
 #[specta::specta]
 fn trigger_update_check(app: AppHandle) -> Result<(), String> {
+    if FORK_UPDATE_PROTECTED {
+        return Ok(());
+    }
+
     let settings = settings::get_settings(&app);
     if !settings.update_checks_enabled {
         return Ok(());
@@ -327,6 +333,7 @@ pub fn run(cli_args: CliArgs) {
             shortcut::change_binding,
             shortcut::reset_binding,
             shortcut::change_ptt_setting,
+            shortcut::change_double_tap_lock_setting,
             shortcut::change_audio_feedback_setting,
             shortcut::change_audio_feedback_volume_setting,
             shortcut::change_sound_theme_setting,
@@ -418,6 +425,7 @@ pub fn run(cli_args: CliArgs) {
             commands::transcription::set_model_unload_timeout,
             commands::transcription::get_model_load_status,
             commands::transcription::unload_model_manually,
+            commands::transcription::preview_post_process_transcript,
             commands::history::get_history_entries,
             commands::history::toggle_history_entry_saved,
             commands::history::get_audio_file_path,

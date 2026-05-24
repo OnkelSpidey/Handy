@@ -20,13 +20,16 @@ export const CustomWords: React.FC<CustomWordsProps> = React.memo(
 
     const handleAddWord = () => {
       const trimmedWord = newWord.trim();
-      const sanitizedWord = trimmedWord.replace(/[<>"'&]/g, "");
-      if (
-        sanitizedWord &&
-        !sanitizedWord.includes(" ") &&
-        sanitizedWord.length <= 50
-      ) {
-        if (customWords.includes(sanitizedWord)) {
+      const sanitizedWord = trimmedWord
+        .replace(/[<>"'&]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+      if (sanitizedWord && sanitizedWord.length <= 80) {
+        if (
+          customWords.some(
+            (word) => word.toLowerCase() === sanitizedWord.toLowerCase(),
+          )
+        ) {
           toast.error(
             t("settings.advanced.customWords.duplicate", {
               word: sanitizedWord,
@@ -76,8 +79,7 @@ export const CustomWords: React.FC<CustomWordsProps> = React.memo(
               onClick={handleAddWord}
               disabled={
                 !newWord.trim() ||
-                newWord.includes(" ") ||
-                newWord.trim().length > 50 ||
+                newWord.trim().length > 80 ||
                 isUpdating("custom_words")
               }
               variant="primary"

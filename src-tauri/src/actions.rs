@@ -51,6 +51,7 @@ struct TranscribeAction {
 
 /// Field name for structured output JSON schema
 const TRANSCRIPTION_FIELD: &str = "transcription";
+const MAX_PROTECTED_TERMS_IN_PROMPT: usize = 80;
 
 /// Strip invisible Unicode characters that some LLMs may insert
 fn strip_invisible_chars(s: &str) -> String {
@@ -59,11 +60,71 @@ fn strip_invisible_chars(s: &str) -> String {
 
 /// Build a system prompt from the user's prompt template.
 /// Removes `${output}` placeholder since the transcription is sent as the user message.
-fn build_system_prompt(prompt_template: &str) -> String {
-    prompt_template.replace("${output}", "").trim().to_string()
+fn build_system_prompt(prompt_template: &str, custom_words: &[String]) -> String {
+    let mut prompt = prompt_template.replace("${output}", "").trim().to_string();
+
+    if let Some(instruction) = protected_terms_instruction(custom_words) {
+        if !prompt.is_empty() {
+            prompt.push_str("\n\n");
+        }
+        prompt.push_str(&instruction);
+    }
+
+    prompt
 }
 
-async fn post_process_transcription(settings: &AppSettings, transcription: &str) -> Option<String> {
+fn append_protected_terms_to_prompt(prompt: String, custom_words: &[String]) -> String {
+    match protected_terms_instruction(custom_words) {
+        Some(instruction) => format!("{}\n\n{}", prompt.trim(), instruction),
+        None => prompt,
+    }
+}
+
+fn protected_terms_instruction(custom_words: &[String]) -> Option<String> {
+    let mut terms: Vec<String> = Vec::new();
+
+    for word in custom_words {
+        let term = word.split_whitespace().collect::<Vec<_>>().join(" ");
+        let term = term.trim();
+
+        if term.is_empty() {
+            continue;
+        }
+
+        if terms
+            .iter()
+            .any(|existing| existing.eq_ignore_ascii_case(term))
+        {
+            continue;
+        }
+
+        terms.push(term.to_string());
+
+        if terms.len() >= MAX_PROTECTED_TERMS_IN_PROMPT {
+            break;
+        }
+    }
+
+    if terms.is_empty() {
+        return None;
+    }
+
+    let list = terms
+        .iter()
+        .map(|term| format!("- {}", term))
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    Some(format!(
+        "Protected terms / custom vocabulary:\n{}\n\nPreserve these terms exactly when they appear in the transcript or are the most likely correction. Do not translate, inflect, split, reinterpret, or rename them. Do not add them if they are not present or clearly implied.",
+        list
+    ))
+}
+
+pub(crate) async fn post_process_transcription(
+    settings: &AppSettings,
+    transcription: &str,
+) -> Option<String> {
     let provider = match settings.active_post_process_provider().cloned() {
         Some(provider) => provider,
         None => {
@@ -144,7 +205,7 @@ async fn post_process_transcription(settings: &AppSettings, transcription: &str)
     if provider.supports_structured_output {
         debug!("Using structured outputs for provider '{}'", provider.id);
 
-        let system_prompt = build_system_prompt(&prompt);
+        let system_prompt = build_system_prompt(&prompt, &settings.custom_words);
         let user_content = transcription.to_string();
 
         // Handle Apple Intelligence separately since it uses native Swift APIs
@@ -259,7 +320,10 @@ async fn post_process_transcription(settings: &AppSettings, transcription: &str)
     }
 
     // Legacy mode: Replace ${output} variable in the prompt with the actual text
-    let processed_prompt = prompt.replace("${output}", transcription);
+    let processed_prompt = append_protected_terms_to_prompt(
+        prompt.replace("${output}", transcription),
+        &settings.custom_words,
+    );
     debug!("Processed prompt length: {} chars", processed_prompt.len());
 
     match crate::llm_client::send_chat_completion(
@@ -351,6 +415,14 @@ pub(crate) async fn process_transcription_output(
     transcription: &str,
     post_process: bool,
 ) -> ProcessedTranscription {
+    if transcription.trim().is_empty() {
+        return ProcessedTranscription {
+            final_text: String::new(),
+            post_processed_text: None,
+            post_process_prompt: None,
+        };
+    }
+
     let settings = get_settings(app);
     let mut final_text = transcription.to_string();
     let mut post_processed_text: Option<String> = None;
@@ -599,7 +671,7 @@ impl ShortcutAction for TranscribeAction {
                                 }
                             }
 
-                            if processed.final_text.is_empty() {
+                            if processed.final_text.trim().is_empty() {
                                 utils::hide_recording_overlay(&ah);
                                 change_tray_icon(&ah, TrayIconState::Idle);
                             } else {

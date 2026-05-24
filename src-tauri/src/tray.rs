@@ -25,6 +25,8 @@ pub enum AppTheme {
     Colored, // Pink/colored theme for Linux
 }
 
+const FORK_UPDATE_PROTECTED: bool = true;
+
 /// Gets the current app theme, with Linux defaulting to Colored theme
 pub fn get_current_theme(app: &AppHandle) -> AppTheme {
     if cfg!(target_os = "linux") {
@@ -87,9 +89,9 @@ pub fn tray_tooltip() -> String {
 
 fn version_label() -> String {
     if cfg!(debug_assertions) {
-        format!("Handy v{} (Dev)", env!("CARGO_PKG_VERSION"))
+        format!("Handy v{} Fork (Dev)", env!("CARGO_PKG_VERSION"))
     } else {
-        format!("Handy v{}", env!("CARGO_PKG_VERSION"))
+        format!("Handy v{} Fork", env!("CARGO_PKG_VERSION"))
     }
 }
 
@@ -121,7 +123,7 @@ pub fn update_tray_menu(app: &AppHandle, state: &TrayIconState, locale: Option<&
         app,
         "check_updates",
         &strings.check_updates,
-        settings.update_checks_enabled,
+        settings.update_checks_enabled && !FORK_UPDATE_PROTECTED,
         None::<&str>,
     )
     .expect("failed to create check updates item");

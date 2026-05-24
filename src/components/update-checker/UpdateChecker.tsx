@@ -8,6 +8,9 @@ import { ProgressBar } from "../shared";
 import { useSettings } from "../../hooks/useSettings";
 import { commands } from "../../bindings";
 
+const FORK_UPDATE_PROTECTED = true;
+const UPSTREAM_RELEASES_URL = "https://github.com/cjpais/Handy/releases/latest";
+
 interface UpdateCheckerProps {
   className?: string;
 }
@@ -25,7 +28,8 @@ const UpdateChecker: React.FC<UpdateCheckerProps> = ({ className = "" }) => {
 
   const { settings, isLoading } = useSettings();
   const settingsLoaded = !isLoading && settings !== null;
-  const updateChecksEnabled = settings?.update_checks_enabled ?? false;
+  const updateChecksEnabled =
+    !FORK_UPDATE_PROTECTED && (settings?.update_checks_enabled ?? false);
 
   const upToDateTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const isManualCheckRef = useRef(false);
@@ -152,6 +156,9 @@ const UpdateChecker: React.FC<UpdateCheckerProps> = ({ className = "" }) => {
 
   // Update status functions
   const getUpdateStatusText = () => {
+    if (FORK_UPDATE_PROTECTED) {
+      return t("footer.forkUpdatesManual");
+    }
     if (!updateChecksEnabled) {
       return t("footer.updateCheckingDisabled");
     }
@@ -203,7 +210,7 @@ const UpdateChecker: React.FC<UpdateCheckerProps> = ({ className = "" }) => {
               <button
                 className="px-3 py-1.5 text-sm rounded bg-logo-primary text-white hover:bg-logo-primary/80 transition-colors"
                 onClick={() => {
-                  openUrl("https://github.com/cjpais/Handy/releases/latest");
+                  openUrl(UPSTREAM_RELEASES_URL);
                   setShowPortableUpdateDialog(false);
                 }}
               >

@@ -42,10 +42,10 @@
 .bar {
   width: 6px;
   background: #ffe5ee;
-  max-height: 20px;
+  max-height: 24px;
   border-radius: 2px;
   transition: height 80ms linear;
-  min-height: 4px;
+  min-height: 3px;
 }
 
 .recording-overlay.fade-in {
@@ -92,4 +92,30 @@
 
 .cancel-button:active {
   transform: scale(0.95);
+}
+
+.lock-indicator {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffe5ee;
+  background: #faa2ca24;
+  box-shadow:
+    0 0 0 1px #ffe5ee22 inset,
+    0 0 10px #faa2ca33;
+  animation: lock-pulse 1.8s infinite ease-in-out;
+  flex-shrink: 0;
+}
+
+@keyframes lock-pulse {
+  0%,
+  100% {
+    opacity: 0.78;
+  }
+  50% {
+    opacity: 1;
+  }
 }

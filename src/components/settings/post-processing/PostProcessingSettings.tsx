@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
-import { RefreshCcw } from "lucide-react";
+import { CheckCircle2, CircleAlert, Clock, Play, RefreshCcw } from "lucide-react";
 import { commands } from "@/bindings";
 
 import { Alert } from "../../ui/Alert";
@@ -21,6 +21,193 @@ import { ModelSelect } from "../PostProcessingSettingsApi/ModelSelect";
 import { usePostProcessProviderState } from "../PostProcessingSettingsApi/usePostProcessProviderState";
 import { ShortcutInput } from "../ShortcutInput";
 import { useSettings } from "../../../hooks/useSettings";
+
+type ReadinessState = "ready" | "warning";
+
+interface ReadinessItem {
+  label: string;
+  value: string;
+  state: ReadinessState;
+}
+
+const StatusDot: React.FC<{ state: ReadinessState }> = ({ state }) => {
+  const Icon = state === "ready" ? CheckCircle2 : CircleAlert;
+  const color = state === "ready" ? "text-green-500" : "text-yellow-500";
+
+  return <Icon className={`h-4 w-4 shrink-0 ${color}`} />;
+};
+
+const isLocalBaseUrl = (baseUrl: string) =>
+  baseUrl.startsWith("http://localhost") ||
+  baseUrl.startsWith("http://127.0.0.1");
+
+const PostProcessingCockpitComponent: React.FC = () => {
+  const { t } = useTranslation();
+  const { getSetting } = useSettings();
+  const [testStatus, setTestStatus] = useState<"idle" | "running" | "ok" | "error">(
+    "idle",
+  );
+  const [testMessage, setTestMessage] = useState("");
+
+  const enabled = getSetting("post_process_enabled") ?? false;
+  const providerId = getSetting("post_process_provider_id") || "";
+  const providers = getSetting("post_process_providers") || [];
+  const provider = providers.find((item) => item.id === providerId) || null;
+  const models = getSetting("post_process_models") || {};
+  const model = provider ? (models[provider.id] || "").trim() : "";
+  const apiKeys = getSetting("post_process_api_keys") || {};
+  const apiKey = provider ? (apiKeys[provider.id] || "").trim() : "";
+  const prompts = getSetting("post_process_prompts") || [];
+  const selectedPromptId = getSetting("post_process_selected_prompt_id") || "";
+  const selectedPrompt =
+    prompts.find((prompt) => prompt.id === selectedPromptId) || null;
+  const customWords = getSetting("custom_words") || [];
+  const apiKeyRequired =
+    !!provider &&
+    provider.id !== "custom" &&
+    provider.id !== "apple_intelligence" &&
+    !isLocalBaseUrl(provider.base_url);
+
+  const readiness: ReadinessItem[] = [
+    {
+      label: t("settings.postProcessing.cockpit.items.enabled"),
+      value: enabled
+        ? t("settings.postProcessing.cockpit.values.enabled")
+        : t("settings.postProcessing.cockpit.values.disabled"),
+      state: enabled ? "ready" : "warning",
+    },
+    {
+      label: t("settings.postProcessing.cockpit.items.provider"),
+      value:
+        provider?.label || t("settings.postProcessing.cockpit.values.missing"),
+      state: provider ? "ready" : "warning",
+    },
+    {
+      label: t("settings.postProcessing.cockpit.items.model"),
+      value: model || t("settings.postProcessing.cockpit.values.missing"),
+      state: model ? "ready" : "warning",
+    },
+    {
+      label: t("settings.postProcessing.cockpit.items.apiKey"),
+      value: apiKeyRequired
+        ? apiKey
+          ? t("settings.postProcessing.cockpit.values.saved")
+          : t("settings.postProcessing.cockpit.values.missing")
+        : t("settings.postProcessing.cockpit.values.notRequired"),
+      state: !apiKeyRequired || apiKey ? "ready" : "warning",
+    },
+    {
+      label: t("settings.postProcessing.cockpit.items.prompt"),
+      value:
+        selectedPrompt?.name ||
+        t("settings.postProcessing.cockpit.values.missing"),
+      state: selectedPrompt?.prompt.trim() ? "ready" : "warning",
+    },
+    {
+      label: t("settings.postProcessing.cockpit.items.protectedTerms"),
+      value: t("settings.postProcessing.cockpit.values.protectedTerms", {
+        count: customWords.length,
+      }),
+      state: "ready",
+    },
+  ];
+
+  const readyCount = readiness.filter((item) => item.state === "ready").length;
+  const isReady = readyCount === readiness.length;
+
+  const handleConnectionTest = async () => {
+    setTestStatus("running");
+    setTestMessage("");
+    const startedAt = performance.now();
+
+    try {
+      const result = await commands.previewPostProcessTranscript(
+        t("settings.postProcessing.cockpit.testTranscript"),
+      );
+      const elapsedMs = Math.round(performance.now() - startedAt);
+
+      if (result.status === "ok") {
+        setTestStatus("ok");
+        setTestMessage(
+          t("settings.postProcessing.cockpit.testOk", {
+            ms: elapsedMs,
+          }),
+        );
+      } else {
+        setTestStatus("error");
+        setTestMessage(result.error);
+      }
+    } catch (err) {
+      setTestStatus("error");
+      setTestMessage(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  return (
+    <SettingContainer
+      title={t("settings.postProcessing.cockpit.title")}
+      description={t("settings.postProcessing.cockpit.description")}
+      descriptionMode="tooltip"
+      layout="stacked"
+      grouped={true}
+    >
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-3 rounded-md border border-mid-gray/20 bg-mid-gray/5 px-3 py-2">
+          <div className="flex items-center gap-2 text-sm">
+            <StatusDot state={isReady ? "ready" : "warning"} />
+            <span className="font-semibold">
+              {isReady
+                ? t("settings.postProcessing.cockpit.ready")
+                : t("settings.postProcessing.cockpit.needsAttention", {
+                    ready: readyCount,
+                    total: readiness.length,
+                  })}
+            </span>
+          </div>
+          <Button
+            onClick={handleConnectionTest}
+            variant="secondary"
+            size="sm"
+            disabled={testStatus === "running"}
+            className="inline-flex items-center gap-2"
+          >
+            <Clock className="h-4 w-4" />
+            {testStatus === "running"
+              ? t("settings.postProcessing.cockpit.testing")
+              : t("settings.postProcessing.cockpit.testConnection")}
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {readiness.map((item) => (
+            <div
+              key={item.label}
+              className="flex min-h-10 items-center gap-2 rounded-md border border-mid-gray/20 px-3 py-2"
+            >
+              <StatusDot state={item.state} />
+              <div className="min-w-0">
+                <div className="text-xs text-mid-gray">{item.label}</div>
+                <div className="truncate text-sm font-medium">{item.value}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {testStatus === "ok" && testMessage && (
+          <Alert variant="success" contained>
+            {testMessage}
+          </Alert>
+        )}
+
+        {testStatus === "error" && testMessage && (
+          <Alert variant="error" contained>
+            {testMessage}
+          </Alert>
+        )}
+      </div>
+    </SettingContainer>
+  );
+};
 
 const PostProcessingSettingsApiComponent: React.FC = () => {
   const { t } = useTranslation();
@@ -413,6 +600,89 @@ const PostProcessingSettingsPromptsComponent: React.FC = () => {
   );
 };
 
+const PostProcessingSettingsTestComponent: React.FC = () => {
+  const { t } = useTranslation();
+  const [input, setInput] = useState("");
+  const [output, setOutput] = useState("");
+  const [error, setError] = useState("");
+  const [isRunning, setIsRunning] = useState(false);
+
+  const handleRunTest = async () => {
+    setError("");
+    setIsRunning(true);
+
+    try {
+      const result = await commands.previewPostProcessTranscript(input);
+      if (result.status === "ok") {
+        setOutput(result.data);
+      } else {
+        setError(result.error);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  return (
+    <SettingContainer
+      title={t("settings.postProcessing.test.title")}
+      description={t("settings.postProcessing.test.description")}
+      descriptionMode="tooltip"
+      layout="stacked"
+      grouped={true}
+    >
+      <div className="space-y-3">
+        <div className="space-y-2 flex flex-col">
+          <label className="text-sm font-semibold">
+            {t("settings.postProcessing.test.inputLabel")}
+          </label>
+          <Textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder={t("settings.postProcessing.test.inputPlaceholder")}
+            className="min-h-[120px]"
+          />
+        </div>
+
+        <div className="flex justify-end">
+          <Button
+            onClick={handleRunTest}
+            variant="primary"
+            size="md"
+            disabled={isRunning}
+            className="inline-flex items-center gap-2"
+          >
+            <Play className="h-4 w-4" />
+            {isRunning
+              ? t("settings.postProcessing.test.running")
+              : t("settings.postProcessing.test.run")}
+          </Button>
+        </div>
+
+        {error && (
+          <Alert variant="error" contained>
+            {error}
+          </Alert>
+        )}
+
+        <div className="space-y-2 flex flex-col">
+          <label className="text-sm font-semibold">
+            {t("settings.postProcessing.test.outputLabel")}
+          </label>
+          <Textarea
+            value={output}
+            readOnly
+            placeholder={t("settings.postProcessing.test.outputPlaceholder")}
+            className="min-h-[120px]"
+          />
+        </div>
+      </div>
+    </SettingContainer>
+  );
+};
+
 export const PostProcessingSettingsApi = React.memo(
   PostProcessingSettingsApiComponent,
 );
@@ -436,12 +706,20 @@ export const PostProcessingSettings: React.FC = () => {
         />
       </SettingsGroup>
 
+      <SettingsGroup title={t("settings.postProcessing.cockpit.groupTitle")}>
+        <PostProcessingCockpitComponent />
+      </SettingsGroup>
+
       <SettingsGroup title={t("settings.postProcessing.api.title")}>
         <PostProcessingSettingsApi />
       </SettingsGroup>
 
       <SettingsGroup title={t("settings.postProcessing.prompts.title")}>
         <PostProcessingSettingsPrompts />
+      </SettingsGroup>
+
+      <SettingsGroup title={t("settings.postProcessing.test.groupTitle")}>
+        <PostProcessingSettingsTestComponent />
       </SettingsGroup>
     </div>
   );

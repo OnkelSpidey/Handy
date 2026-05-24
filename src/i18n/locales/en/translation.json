@@ -195,6 +195,10 @@
       "pushToTalk": {
         "label": "Push To Talk",
         "description": "Hold to record, release to stop"
+      },
+      "doubleTapLock": {
+        "label": "Double-Tap Lock",
+        "description": "Double-tap the shortcut to keep recording hands-free, then press it again to stop"
       }
     },
     "models": {
@@ -351,8 +355,8 @@
       },
       "customWords": {
         "title": "Custom Words",
-        "description": "Add words that are often misheard or misspelled during transcription. The system will automatically correct similar-sounding words to match your list.",
-        "placeholder": "Add a word",
+        "description": "Add words and terms that are often misheard or misspelled. They help transcription and are protected during post-processing.",
+        "placeholder": "Word or term",
         "add": "Add",
         "remove": "Remove {{word}}",
         "duplicate": "\"{{word}}\" already exists"
@@ -362,6 +366,33 @@
       "title": "Post Process",
       "hotkey": {
         "title": "Hotkey"
+      },
+      "cockpit": {
+        "groupTitle": "Cockpit",
+        "title": "Post-Processing Cockpit",
+        "description": "Shows whether provider, model, API key, and prompt are ready.",
+        "ready": "Post-processing ready",
+        "needsAttention": "{{ready}}/{{total}} checks ready",
+        "testConnection": "Test connection",
+        "testing": "Testing...",
+        "testTranscript": "this is a short test period",
+        "testOk": "Connection tested successfully in {{ms}} ms.",
+        "items": {
+          "enabled": "Post-processing",
+          "provider": "Provider",
+          "model": "Model",
+          "apiKey": "API key",
+          "prompt": "Prompt",
+          "protectedTerms": "Protected terms"
+        },
+        "values": {
+          "enabled": "Active",
+          "disabled": "Disabled",
+          "missing": "Missing",
+          "saved": "Saved",
+          "notRequired": "Not required",
+          "protectedTerms": "{{count}} terms"
+        }
       },
       "api": {
         "title": "API (OpenAI Compatible)",
@@ -416,6 +447,17 @@
         "cancel": "Cancel",
         "selectToEdit": "Select a prompt above to view and edit its details.",
         "createFirst": "Click 'Create New Prompt' above to create your first post-processing prompt."
+      },
+      "test": {
+        "groupTitle": "Test Area",
+        "title": "Test Prompt",
+        "description": "Test the selected prompt with a raw transcript.",
+        "inputLabel": "Raw Transcript",
+        "inputPlaceholder": "Paste raw dictation here...",
+        "run": "Test",
+        "running": "Testing...",
+        "outputLabel": "Output",
+        "outputPlaceholder": "The cleaned output appears here."
       }
     },
     "history": {
@@ -548,6 +590,7 @@
     "downloadUpdate": "Download Update",
     "restart": "Restart",
     "updateCheckingDisabled": "Update Checking Disabled",
+    "forkUpdatesManual": "Fork: manual updates",
     "downloading": "Downloading... {{progress}}%",
     "installing": "Installing...",
     "preparing": "Preparing...",
@@ -607,6 +650,7 @@
   },
   "overlay": {
     "transcribing": "Transcribing...",
-    "processing": "Processing..."
+    "processing": "Processing...",
+    "locked": "Locked recording"
   }
 }

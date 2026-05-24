@@ -1,4 +1,5 @@
 import { listen } from "@tauri-apps/api/event";
+import { LockKeyhole } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -11,7 +12,7 @@ import { commands } from "@/bindings";
 import i18n, { syncLanguageFromSettings } from "@/i18n";
 import { getLanguageDirection } from "@/lib/utils/rtl";
 
-type OverlayState = "recording" | "transcribing" | "processing";
+type OverlayState = "recording" | "locked" | "transcribing" | "processing";
 
 const RecordingOverlay: React.FC = () => {
   const { t } = useTranslation();
@@ -78,19 +79,26 @@ const RecordingOverlay: React.FC = () => {
       <div className="overlay-left">{getIcon()}</div>
 
       <div className="overlay-middle">
-        {state === "recording" && (
+        {(state === "recording" || state === "locked") && (
           <div className="bars-container">
-            {levels.map((v, i) => (
-              <div
-                key={i}
-                className="bar"
-                style={{
-                  height: `${Math.min(20, 4 + Math.pow(v, 0.7) * 16)}px`, // Cap at 20px max height
-                  transition: "height 60ms ease-out, opacity 120ms ease-out",
-                  opacity: Math.max(0.2, v * 1.7), // Minimum opacity for visibility
-                }}
-              />
-            ))}
+            {levels.map((v, i) => {
+              const amplifiedLevel = Math.min(
+                1,
+                Math.pow(Math.max(0, v) * 5, 0.55),
+              );
+
+              return (
+                <div
+                  key={i}
+                  className="bar"
+                  style={{
+                    height: `${Math.round(3 + amplifiedLevel * 21)}px`,
+                    transition: "height 55ms ease-out, opacity 100ms ease-out",
+                    opacity: Math.min(1, Math.max(0.25, amplifiedLevel)),
+                  }}
+                />
+              );
+            })}
           </div>
         )}
         {state === "transcribing" && (
@@ -110,6 +118,11 @@ const RecordingOverlay: React.FC = () => {
             }}
           >
             <CancelIcon />
+          </div>
+        )}
+        {state === "locked" && (
+          <div className="lock-indicator" aria-label={t("overlay.locked")}>
+            <LockKeyhole size={14} strokeWidth={2.4} />
           </div>
         )}
       </div>

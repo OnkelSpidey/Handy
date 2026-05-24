@@ -213,6 +213,10 @@
       "pushToTalk": {
         "label": "Push-to-Talk",
         "description": "Gedrückt halten zum Aufnehmen, loslassen zum Stoppen"
+      },
+      "doubleTapLock": {
+        "label": "Doppeltipp-Lock",
+        "description": "Tastenkürzel doppelt antippen, um freihändig weiter aufzunehmen, dann erneut drücken zum Stoppen"
       }
     },
     "sound": {
@@ -351,8 +355,8 @@
       },
       "customWords": {
         "title": "Benutzerdefinierte Wörter",
-        "description": "Wörter hinzufügen, die oft falsch gehört oder geschrieben werden. Das System korrigiert automatisch ähnlich klingende Wörter entsprechend deiner Liste.",
-        "placeholder": "Wort hinzufügen",
+        "description": "Wörter und Begriffe hinzufügen, die oft falsch gehört oder geschrieben werden. Sie helfen der Transkription und werden in der Nachbearbeitung geschützt.",
+        "placeholder": "Wort oder Begriff",
         "add": "Hinzufügen",
         "remove": "{{word}} entfernen",
         "duplicate": "\"{{word}}\" existiert bereits"
@@ -362,6 +366,33 @@
       "title": "Nachbearbeitung",
       "hotkey": {
         "title": "Tastenkürzel"
+      },
+      "cockpit": {
+        "groupTitle": "Cockpit",
+        "title": "Nachbearbeitungs-Cockpit",
+        "description": "Zeigt, ob Anbieter, Modell, API-Schlüssel und Prompt bereit sind.",
+        "ready": "Nachbearbeitung bereit",
+        "needsAttention": "{{ready}}/{{total}} Punkte bereit",
+        "testConnection": "Verbindung testen",
+        "testing": "Teste...",
+        "testTranscript": "das ist ein kurzer test punkt",
+        "testOk": "Verbindung erfolgreich getestet in {{ms}} ms.",
+        "items": {
+          "enabled": "Nachbearbeitung",
+          "provider": "Anbieter",
+          "model": "Modell",
+          "apiKey": "API-Schlüssel",
+          "prompt": "Prompt",
+          "protectedTerms": "Geschützte Begriffe"
+        },
+        "values": {
+          "enabled": "Aktiv",
+          "disabled": "Deaktiviert",
+          "missing": "Fehlt",
+          "saved": "Gespeichert",
+          "notRequired": "Nicht erforderlich",
+          "protectedTerms": "{{count}} Begriffe"
+        }
       },
       "api": {
         "title": "API (OpenAI-kompatibel)",
@@ -416,6 +447,17 @@
         "cancel": "Abbrechen",
         "selectToEdit": "Wähle oben einen Prompt aus, um dessen Details anzuzeigen und zu bearbeiten.",
         "createFirst": "Klicke oben auf 'Neuen Prompt erstellen', um deinen ersten Nachbearbeitungs-Prompt zu erstellen."
+      },
+      "test": {
+        "groupTitle": "Testbereich",
+        "title": "Prompt testen",
+        "description": "Teste den ausgewählten Prompt mit einem Rohtranskript.",
+        "inputLabel": "Rohtranskript",
+        "inputPlaceholder": "Rohdiktat hier einfügen...",
+        "run": "Testen",
+        "running": "Teste...",
+        "outputLabel": "Ausgabe",
+        "outputPlaceholder": "Die bereinigte Ausgabe erscheint hier."
       }
     },
     "history": {
@@ -548,6 +590,7 @@
     "downloadUpdate": "Update herunterladen",
     "restart": "Neustart",
     "updateCheckingDisabled": "Update-Prüfung deaktiviert",
+    "forkUpdatesManual": "Fork: manuelle Updates",
     "downloading": "Wird heruntergeladen... {{progress}}%",
     "installing": "Wird installiert...",
     "preparing": "Wird vorbereitet...",
@@ -607,6 +650,7 @@
   },
   "overlay": {
     "transcribing": "Transkribiere...",
-    "processing": "Verarbeite..."
+    "processing": "Verarbeite...",
+    "locked": "Aufnahme gelockt"
   }
 }

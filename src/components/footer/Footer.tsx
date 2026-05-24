@@ -33,7 +33,7 @@ const Footer: React.FC = () => {
           <UpdateChecker />
           <span>•</span>
           {/* eslint-disable-next-line i18next/no-literal-string */}
-          <span>v{version}</span>
+          <span>v{version} Fork</span>
         </div>
       </div>
     </div>
