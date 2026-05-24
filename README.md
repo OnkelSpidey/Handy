@@ -1,49 +1,54 @@
-# Handy
+# Handy Fork
 
-[![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/invite/WVBeWsNXK4)
+This is a personal fork of [Handy](https://github.com/cjpais/Handy), a free and open source speech-to-text app.
 
-**A free, open source, and extensible speech-to-text application that works completely offline.**
+The original Handy project is the foundation. This fork keeps that lightweight, local-first spirit, but adapts the app for a more opinionated daily workflow: German-first dictation, cleaner post-processing, coding-assistant prompts, protected project vocabulary, and a calmer macOS overlay experience.
 
-Handy is a cross-platform desktop application that provides simple, privacy-focused speech transcription. Press a shortcut, speak, and have your words appear in any text field. This happens on your own computer without sending any information to the cloud.
+The goal is not to turn Handy into a large feature suite. The direction is closer to a focused WhisperFlow-style tool: simple, fast, stable, pleasant to look at, and useful in the moments where dictation usually gets annoying.
 
-## Why Handy?
+## What Is Different In This Fork?
 
-Handy was created to fill the gap for a truly open source, extensible speech-to-text tool. As stated on [handy.computer](https://handy.computer):
+This fork currently focuses on three areas:
 
-- **Free**: Accessibility tooling belongs in everyone's hands, not behind a paywall
-- **Open Source**: Together we can build further. Extend Handy for yourself and contribute to something bigger
-- **Private**: Your voice stays on your computer. Get transcriptions without sending audio to the cloud
-- **Simple**: One tool, one job. Transcribe what you say and put it into a text box
+- **More reliable dictation behavior**
+  - Empty recordings stay empty instead of inserting placeholder text or model/template tokens.
+  - The recording overlay sits higher above the macOS Dock.
+  - The microphone activity bars are easier to see while keeping the pill compact.
+  - Optional double-tap lock mode allows hands-free recording without losing push-to-talk.
 
-Handy isn't trying to be the best speech-to-text app—it's trying to be the most forkable one.
+- **Better post-processing for real dictated text**
+  - A post-processing cockpit shows whether provider, model, API key, selected prompt, and protected terms are ready.
+  - A prompt test area lets raw transcript cleanup be tested directly in the app.
+  - Test failures are explicit instead of silently returning the original text.
+  - Custom words also act as protected terms for the LLM cleanup step.
+  - Multi-word terms such as `Claude Code`, `Cloud Code`, or project names can be protected.
 
-## How It Works
+- **Safer fork maintenance**
+  - The app is marked as a local `Fork` in the footer and tray.
+  - Upstream auto-update behavior is protected so this fork is not accidentally overwritten by an official Handy release.
+  - Fork-specific notes and build instructions are collected in [FORK_NOTES.md](FORK_NOTES.md).
 
-1. **Press** a configurable keyboard shortcut to start/stop recording (or use push-to-talk mode)
-2. **Speak** your words while the shortcut is active
-3. **Release** and Handy processes your speech using Whisper
-4. **Get** your transcribed text pasted directly into whatever app you're using
+## Who Is This Fork For?
 
-The process is entirely local:
+This version is currently shaped around one specific workflow:
 
-- Silence is filtered using VAD (Voice Activity Detection) with Silero
-- Transcription uses your choice of models:
-  - **Whisper models** (Small/Medium/Turbo/Large) with GPU acceleration when available
-  - **Parakeet V3** - CPU-optimized model with excellent performance and automatic language detection
-- Works on Windows, macOS, and Linux
+- short German messages
+- notes and checklists
+- restaurant and work communication
+- coding-assistant instructions for tools like Codex, Claude Code, and similar tools
+- conservative transcript cleanup without creative rewriting
+- preserving important tool names, project names, and app names
 
-## Quick Start
+It may still be useful to others, but it is intentionally not trying to be a general-purpose commercial dictation suite.
 
-### Installation
+## Original Handy
 
-1. Download the latest release from the [releases page](https://github.com/cjpais/Handy/releases) or the [website](https://handy.computer)
-   - **macOS**: Also available via [Homebrew cask](https://formulae.brew.sh/cask/handy): `brew install --cask handy`
-   - **Windows**: Also available via [winget](https://github.com/microsoft/winget-pkgs): `winget install cjpais.Handy` \
-     **Note:** The Homebrew cask and winget package are not maintained by the Handy developers.
-2. Install the application
-3. Launch Handy and grant necessary system permissions (microphone, accessibility)
-4. Configure your preferred keyboard shortcuts in Settings
-5. Start transcribing!
+For the full upstream project description, platform notes, community links, releases, and general installation details, see the original project:
+
+- GitHub: [cjpais/Handy](https://github.com/cjpais/Handy)
+- Website: [handy.computer](https://handy.computer)
+
+This fork remains based on Handy's core architecture: Tauri, Rust, React, local speech recognition, VAD, and configurable shortcuts.
 
 ### Development Setup
 
