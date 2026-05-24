@@ -30,16 +30,15 @@ This fork currently focuses on three areas:
 
 ## Who Is This Fork For?
 
-This version is currently shaped around one specific workflow:
+This version is shaped for people who want a focused dictation tool rather than a large productivity suite:
 
-- short German messages
-- notes and checklists
-- restaurant and work communication
-- coding-assistant instructions for tools like Codex, Claude Code, and similar tools
-- conservative transcript cleanup without creative rewriting
-- preserving important tool names, project names, and app names
+- short messages, notes, tasks, and checklists
+- longer instructions for coding assistants such as Codex, Claude Code, and similar tools
+- natural transcript cleanup without creative rewriting
+- better handling of mixed German/English wording, technical terms, and product names
+- protected vocabulary for project names, app names, tool names, and other important terms
 
-It may still be useful to others, but it is intentionally not trying to be a general-purpose commercial dictation suite.
+It is intentionally not trying to be a general-purpose commercial dictation suite. The focus is a small, calm, reliable app that turns rough speech into usable text with as little friction as possible.
 
 ## Original Handy
 
